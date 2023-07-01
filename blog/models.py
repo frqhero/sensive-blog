@@ -34,6 +34,18 @@ class PostQuerySet(models.QuerySet):
 
         return self
 
+    def prefetch_authors_and_tags_with_comments_count(self):
+        posts_query_set = self.prefetch_related(
+            'author',
+            models.Prefetch(
+                'tags',
+                queryset=Tag.objects.annotate(
+                    posts_count=models.Count('posts')
+                ),
+            ),
+        )
+        return posts_query_set
+
 
 class Post(models.Model):
     title = models.CharField('Заголовок', max_length=200)

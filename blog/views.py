@@ -7,13 +7,7 @@ from blog.models import Comment, Post, Tag
 def get_most_popular_posts():
     return (
         Post.objects.popular()
-        .prefetch_related(
-            'author',
-            Prefetch(
-                'tags',
-                queryset=Tag.objects.annotate(posts_count=Count('posts')),
-            ),
-        )[:5]
+        .prefetch_authors_and_tags_with_comments_count()[:5]
         .fetch_with_comments_count()
     )
 
@@ -50,13 +44,7 @@ def index(request):
     most_fresh_posts = (
         Post.objects.annotate(comments_count=Count('comments', distinct=True))
         .order_by('-published_at')[:5]
-        .prefetch_related(
-            'author',
-            Prefetch(
-                'tags',
-                queryset=Tag.objects.annotate(posts_count=Count('posts')),
-            ),
-        )
+        .prefetch_authors_and_tags_with_comments_count()
     )
 
     context = {
@@ -126,13 +114,7 @@ def tag_filter(request, tag_title):
     related_posts = (
         tag.posts.all()[:20]
         .annotate(comments_count=Count('comments'))
-        .prefetch_related(
-            'author',
-            Prefetch(
-                'tags',
-                queryset=Tag.objects.annotate(posts_count=Count('posts')),
-            ),
-        )
+        .prefetch_authors_and_tags_with_comments_count()
     )
 
     context = {
